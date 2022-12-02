@@ -3,7 +3,7 @@
 [**SparseFusion: Distilling View-conditioned Diffusion for 3D Reconstruction**](https://sparsefusion.github.io/)<br/>
 [Zhizhuo Zhou](https://www.zhiz.dev/),
 [Shubham Tulsiani](https://shubhtuls.github.io/)<br/>
-_[GitHub](https://github.com/zhizdev/sparsefusion) | [arXiv](https://sparsefusion.github.io/) | [Project page](https://sparsefusion.github.io/)_
+_[GitHub](https://github.com/zhizdev/sparsefusion) | [arXiv](https://arxiv.org/abs/2212.00792) | [Project page](https://sparsefusion.github.io/)_
 
 ![txt2img-stable2](media/teaser.jpg)
 SparseFusion reconstructs a consistent and realistic 3D neural scene representation from as few as 2 input images with known relative pose. SparseFusion is able to generate detailed and plausible structures in uncertain or unobserved regions (such as front of the hydrant, teddybear's face, back of the laptop, or left side of the toybus).
@@ -15,13 +15,13 @@ We plan on releasing code and pretrained models in December 2022. Stay tuned for
 ## BibTeX
 
 ```
-@misc{,
-      title={}, 
-      author={},
-      year={},
-      eprint={},
-      archivePrefix={},
-      primaryClass={}
+@misc{zhou2022sparsefusion,
+      title={SparseFusion: Distilling View-conditioned Diffusion for 3D Reconstruction}, 
+      author={Zhizhuo Zhou and Shubham Tulsiani},
+      year={2022},
+      eprint={2212.00792},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
 }
 ```
 
