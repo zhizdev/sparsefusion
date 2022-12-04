@@ -15,7 +15,7 @@ We plan on releasing code and pretrained models in December 2022. Stay tuned for
 ## BibTeX
 
 ```
-@article{zhou2023sparsefusion,
+@article{zhou2022sparsefusion,
   title={SparseFusion: Distilling View-conditioned Diffusion for 3D Reconstruction}, 
   author={Zhizhuo Zhou and Shubham Tulsiani},
   journal={arXiv preprint arXiv:2212.00792},
