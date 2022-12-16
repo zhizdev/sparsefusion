@@ -1,0 +1,15 @@
+*.egg-info/
+**/__pycache__/
+**/build/
+**build**
+vis/
+output/
+out/
+logs/
+data/
+checkpoints/
+*.zip
+*.gz
+*.tar
+*.pt
+*.so
