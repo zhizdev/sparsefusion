@@ -717,7 +717,6 @@ class DDPM(nn.Module):
             #@ p_sample LOOP
             for times, times_next in tqdm(timesteps, desc = 'sampling loop time step', total = len(timesteps), disable = not use_tqdm):
                 is_last_timestep = times_next == 0
-                print(times)
                 images = self.p_sample(
                     unet,
                     images,
