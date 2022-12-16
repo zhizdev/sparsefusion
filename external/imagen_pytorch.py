@@ -1506,9 +1506,7 @@ class Unet(nn.Module):
         # initial convolution
 
         #! DEBUG PRINT SHAPE
-        print('before init conv', x.shape)
         x = self.init_conv(x)
-        print('after init conv', x.shape)
         # init conv residual
 
         if self.init_conv_to_final_conv_residual:
