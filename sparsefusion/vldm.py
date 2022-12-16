@@ -394,15 +394,7 @@ class DDPM(nn.Module):
             inpaint_images = self.resize_to(inpaint_images, shape[-1])
             inpaint_masks = self.resize_to(rearrange(inpaint_masks, 'b ... -> b 1 ...').float(), shape[-1]).bool()
 
-        # time
-
-        #!!!!!!!!!!!!!!!!!!!!!
-        #! DEBUG DEBUGE DEBUG
         timesteps = noise_scheduler.get_sampling_timesteps(batch, device = device)
-
-        #!!!!!!!!!!!!!!!!!!!!!
-        #! DEBUG DEBUGE DEBUG
-        # timesteps = noise_scheduler.get_sampling_timesteps_one(batch, device = device)
 
         for times, times_next in tqdm(timesteps, desc = 'sampling loop time step', total = len(timesteps), disable = not use_tqdm):
             is_last_timestep = times_next == 0
@@ -589,28 +581,6 @@ class DDPM(nn.Module):
 
         x_start = self.normalize_img(x_start)
         lowres_cond_img = maybe(self.normalize_img)(lowres_cond_img)
-
-        # random cropping during training
-        # for upsamplers
-
-        #! COMMENTED OUT B/C NO UPSAMPLER
-        # if exists(random_crop_size):
-        #     if is_video:
-        #         frames = x_start.shape[2]
-        #         x_start, lowres_cond_img, noise = rearrange_many((x_start, lowres_cond_img, noise), 'b c f h w -> (b f) c h w')
-
-        #     aug = K.RandomCrop((random_crop_size, random_crop_size), p = 1.)
-
-        #     # make sure low res conditioner and image both get augmented the same way
-        #     # detailed https://kornia.readthedocs.io/en/latest/augmentation.module.html?highlight=randomcrop#kornia.augmentation.RandomCrop
-        #     x_start = aug(x_start)
-        #     lowres_cond_img = aug(lowres_cond_img, params = aug._params)
-        #     noise = aug(noise, params = aug._params)
-
-        #     if is_video:
-        #         x_start, lowres_cond_img, noise = rearrange_many((x_start, lowres_cond_img, noise), '(b f) c h w -> b c f h w', f = frames)
-
-        # get x_t
 
         x_noisy, log_snr = noise_scheduler.q_sample(x_start = x_start, t = times, noise = noise)
 

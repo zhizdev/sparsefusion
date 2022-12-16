@@ -19,6 +19,7 @@ We are releasing our inference code in early access. Future releases may drastic
 1. Code for inference
 2. Pretrained weights for 10 categories
 
+The repository is still under construction and I am working on improving comments and code readability.
 For bugs and issues, please open an issue on GitHub and I will try to address it promptly.
 
 ---
@@ -88,7 +89,7 @@ $ python demo.py -d co3d -r data/co3d/ -c hydrant -i 0
 ```
 
 ### Output
-Output artifacts—images, gifs, torch-ngp checkpoints—will be saved to `output\demo\` by default. 
+Output artifacts—images, gifs, torch-ngp checkpoints—will be saved to `output/demo/` by default. 
 
 ---
 ## Citation
