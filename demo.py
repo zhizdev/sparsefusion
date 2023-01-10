@@ -44,7 +44,7 @@ def fit(gpu, args):
     for ci, cat in enumerate(cat_list):
 
         #@ LOAD MODELS
-        eft, vae, vldm = load_models(gpu=0, args=args, verbose=False)
+        eft, vae, vldm = load_models(gpu=gpu, args=args, verbose=False)
         use_diffusion = True
 
         #@ LOAD DATASET
