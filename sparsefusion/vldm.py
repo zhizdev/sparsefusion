@@ -629,6 +629,7 @@ class DDPM(nn.Module):
 
         return losses.mean()
 
+    @torch.no_grad()
     def forward_noloss(
         self,
         images,
@@ -694,54 +695,13 @@ class DDPM(nn.Module):
                 cond_drop_prob = self.cond_drop_prob,
             )
 
-            pred_x0 = noise_scheduler.predict_start_from_noise(x_start, t = times, noise = pred)
+            pred_x0 = noise_scheduler.predict_start_from_noise(x_noisy, t = times, noise = pred)
 
             if self.clip_output:
                 pred_x0.clamp_(-self.clip_value, self.clip_value)
 
-        elif method == 'naive5':
-
-            #@ GET SAMPLE TIMES
-            times = noise_scheduler.sample_random_times_bounded(b, min_thres=min_thres, max_thres=max_thres, device = device)
-            timesteps = noise_scheduler.get_sampling_timesteps_custom(b, device = device, min_thres=0.0, max_thres=max_thres, n_steps=50)
-
-            #@ PREPARE FOR FORWARD PASS
-            x_start = self.normalize_img(images)
-            noise = None
-            noise = default(noise, lambda: torch.randn_like(x_start))
-            x_noisy, log_snr = noise_scheduler.q_sample(x_start = x_start, t = times, noise = noise)
-            use_tqdm = False
-
-            images = x_noisy
-
-            #@ p_sample LOOP
-            for times, times_next in tqdm(timesteps, desc = 'sampling loop time step', total = len(timesteps), disable = not use_tqdm):
-                is_last_timestep = times_next == 0
-                images = self.p_sample(
-                    unet,
-                    images,
-                    times,
-                    t_next = times_next,
-                    conditional_embeds = conditional_embeds,
-                    conditional_mask = conditional_masks,
-                    cond_images = cond_images,
-                    cond_scale= 1,
-                    lowres_cond_img = None,
-                    lowres_noise_times = None,
-                    noise_scheduler = noise_scheduler,
-                    pred_objective = pred_objective,
-                    dynamic_threshold = True
-                )
-
-            pred = images
-            if self.clip_output:
-                pred.clamp_(-self.clip_value, self.clip_value)
-            pred_x0 = pred
-
-
-        elif method == 'plms5':
-            pass
-
+        else:
+            raise NotImplementedError
 
         if return_noise:
             alpha_cumprod = torch.sigmoid(log_snr)
