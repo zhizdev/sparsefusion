@@ -190,7 +190,10 @@ def distillation_loop(
         batch_cameras = relative_cam.get_camera_slice(scene_cameras_vox, batch_idx)
         batch_rgb = scene_rgb[batch_idx]
         batch_valid_region = scene_valid_region[batch_idx]
+
+        #@ CURRENTLY UNUSED FOR DISTILLATION
         batch_valid_region = torch.ones_like(batch_valid_region)
+        
         if scene_mask is not None:
             batch_mask = scene_mask[batch_idx]
 
