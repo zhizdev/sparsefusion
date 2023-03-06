@@ -3,7 +3,7 @@
 [**SparseFusion: Distilling View-conditioned Diffusion for 3D Reconstruction**](https://sparsefusion.github.io/)<br/>
 [Zhizhuo Zhou](https://www.zhiz.dev/),
 [Shubham Tulsiani](https://shubhtuls.github.io/)<br/>
-_[GitHub](https://github.com/zhizdev/sparsefusion) | [arXiv](https://arxiv.org/abs/2212.00792) | [Project page](https://sparsefusion.github.io/)_
+_CVPR '23 | [GitHub](https://github.com/zhizdev/sparsefusion) | [arXiv](https://arxiv.org/abs/2212.00792) | [Project page](https://sparsefusion.github.io/)_
 
 ![txt2img-stable2](media/teaser.jpg)
 SparseFusion reconstructs a consistent and realistic 3D neural scene representation from as few as 2 input images with known relative pose. SparseFusion is able to generate detailed and plausible structures in uncertain or unobserved regions (such as front of the hydrant, teddybear's face, back of the laptop, or left side of the toybus).
@@ -92,15 +92,20 @@ $ python demo.py -d co3d -r data/co3d/ -c hydrant -i 0
 Output artifacts—images, gifs, torch-ngp checkpoints—will be saved to `output/demo/` by default. 
 
 ---
+
+## Training
+Early access training code is provided in `train.py`. Please follow the evaluation tutorial above to setup the environment and pretrained VAE weights. 
+
+---
 ## Citation
 If you find this work useful, a citation will be appreciated via:
 
 ```
-@article{zhou2022sparsefusion,
+@inproceedings{zhou2023sparsefusion,
   title={SparseFusion: Distilling View-conditioned Diffusion for 3D Reconstruction}, 
   author={Zhizhuo Zhou and Shubham Tulsiani},
-  journal={arXiv preprint arXiv:2212.00792},
-  year={2022}
+  booktitle={CVPR},
+  year={2023}
 }
 ```
 
