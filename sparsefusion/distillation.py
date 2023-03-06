@@ -162,7 +162,7 @@ def distillation_loop(
 
     #@ INITIALIZE TORCH NGP
     ngp_network = NeRFNetwork(opt).cuda(gpu).train()
-    optimizer = torch.optim.Adam(ngp_network.get_params(), lr=5e-4)
+    optimizer = torch.optim.Adam(ngp_network.get_params(lr=5e-4))
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3000, gamma=0.2)
     running_loss = 0.0
     loss_list, fusion_loss_list, opacity_loss_list, entropy_loss_list = [], [], [], []
