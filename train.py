@@ -555,7 +555,7 @@ def main():
                         help='category')
     parser.add_argument('-r', '--root', type=str, default='/grogu/datasets/co3d/', metavar='s',
                         help='location of test features')
-    parser.add_argument('-d', '--dataset', type=str, default='co3d', metavar='s',
+    parser.add_argument('-d', '--dataset_name', type=str, default='co3d', metavar='s',
                         help='dataset name')
     parser.add_argument('-b', '--backend', type=str, default='nccl', metavar='s',
                         help='nccl')
@@ -569,7 +569,7 @@ def main():
 
     torch.manual_seed(1)
 
-    if args.dataset == 'co3d':
+    if args.dataset_name == 'co3d':
 
         #! ####################################################################
         #! TODO:  
