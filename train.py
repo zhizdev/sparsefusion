@@ -38,7 +38,7 @@ def save_visualization(
     target_image,
     loss_history_color,
     renderer_grid,
-    dir='output/simp_nerf',
+    dir='output/test',
     mod='',
     input_rgb=None,
     input_cameras=None,
@@ -53,7 +53,7 @@ def save_visualization(
     
     with torch.no_grad():
 
-        if args.train_gpnr:
+        if args.train_eft:
             epipolar_features , _, _ = renderer_grid(
                 cameras=camera, 
                 volumetric_function=eft.module.batched_forward
@@ -135,7 +135,7 @@ def vis_helper(step, args, eft, diffusion, vae, renderer_grid, target_cameras, t
     
     with torch.no_grad():
 
-        if args.train_gpnr:
+        if args.train_eft:
             eft.module.encode(input_cameras, input_rgb)
         else:
             eft.encode(input_cameras, input_rgb)
@@ -251,7 +251,7 @@ def load_dataset(args, image_size=256):
     Return dataset
     '''
     if args.dataset_name == 'co3d':
-        train_dataset = CO3Dv2Wrapper(root=args.root, category=args.category, sample_batch_size=10, image_size=image_size)
+        train_dataset = CO3Dv2Wrapper(root=args.root, category=args.category, sample_batch_size=20, image_size=image_size)
     return train_dataset
 
 
@@ -274,18 +274,14 @@ def train(gpu, args):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50000, gamma=0.5)
     diffusion = nn.parallel.DistributedDataParallel(diffusion, device_ids=[gpu], find_unused_parameters=True)
 
-    if args.train_gpnr:
-        print('training gpnr')
+    if args.train_eft:
+        print('training eft')
         optimizer_nerf = torch.optim.Adam(eft.parameters(), lr=lr)
         scheduler_nerf = torch.optim.lr_scheduler.StepLR(optimizer_nerf, step_size=50000, gamma=0.5)
         eft = nn.parallel.DistributedDataParallel(eft, device_ids=[gpu])
 
     #! LOAD DATALOADER
     batch_size = 1
-    print('initializing core on gpu', gpu)
-    # core = GPNRCore(args.dataset_name, args.exp_name, args.exp_group, gpu=gpu)
-    if args.dataset_name == 'srn':
-        args.root = f'/scratch/zhizhuoz/datasets/srn/srn_{args.category}/'
     print('preparing to load ds on gpu', gpu)
     train_dataset = load_dataset(args, image_size=args.image_size)
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset,
@@ -307,7 +303,7 @@ def train(gpu, args):
     n_repeat = args.repeat
     max_epoch = 1000
     vis_itr=args.vis_itr
-    save_itr=args.save_itr #15000
+    save_itr=args.save_itr
     render_batch_size = 1
 
     max_step = n_repeat*max_epoch*len(train_loader)
@@ -326,7 +322,7 @@ def train(gpu, args):
             for re in range(n_repeat):
                 #! FIT CURRENT BATCH
                 optimizer.zero_grad()
-                if args.train_gpnr:
+                if args.train_eft:
                     optimizer_nerf.zero_grad()
                 torch.autograd.set_detect_anomaly(True)
                 
@@ -358,8 +354,8 @@ def train(gpu, args):
                     elif bbox is not None:
                         renderer_grid, renderer_feat, renderer_mc = init_renderer(gpu, train_dataset.img_h, train_dataset.img_w, min=min_depth, max=volume_extent_world, bbox=bbox[batch_idx], scale_factor=args.scale_factor)
 
-                #! LFN
-                if args.train_gpnr:
+                #! EFT
+                if args.train_eft:
                     epipolar_features, sampled_rays, reg_term = renderer_feat(
                         cameras=batch_cameras, 
                         volumetric_function=eft.module.batched_forward,
@@ -403,7 +399,7 @@ def train(gpu, args):
                 batch_mask[batch_mask <= 0.6] = 0.0
 
                 color_loss = 0
-                if args.train_gpnr:
+                if args.train_eft:
                     #! COMPUTE COLOR ERROR
                     colors_at_rays = sample_images_at_mc_locs(
                         batch_rgb, 
@@ -425,7 +421,7 @@ def train(gpu, args):
                 loss = d_loss + color_loss
 
 
-                #! OPTIM
+                #! BACKWARD
                 #! CATCH SOME ERRORS
                 try:
                     loss.backward()
@@ -434,10 +430,11 @@ def train(gpu, args):
                     print('RUNTIME ERROR')
                     print(data['idx'])
                     return
-                    
+                
+                #! OPTIM STEP
                 optimizer.step()
                 scheduler.step()
-                if args.train_gpnr:
+                if args.train_eft:
                     optimizer_nerf.step()
                     scheduler_nerf.step()
 
@@ -467,28 +464,33 @@ def train(gpu, args):
 
 
 def save_model(args, step, mod, model, optimizer, scheduler, eft=None):
+    '''
+    Saves Models
+    '''
     torch.save({
         'step': step,
         'model_state_dict': model.module.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'scheduler_state_dict': scheduler.state_dict(),
         }, f'{args.exp_dir}/ckpt_{mod}.pt')
-    if args.train_gpnr:
+    if args.train_eft:
         torch.save({
         'step': step,
         'model_state_dict': eft.module.state_dict(),
-        }, f'{args.exp_dir}/ckpt_{mod}_gpnr.pt')
+        }, f'{args.exp_dir}/ckpt_{mod}_eft.pt')
 
 
 def load_model(gpu, args):
-
-    #! LOAD GPNR
+    '''
+    Loads Models
+    '''
+    #! LOAD EFT (eft)
     eft = EpipolarFeatureTransformer(use_r=args.use_r, encoder=args.encoder, return_features=True, remove_unused_layers=False).cuda(gpu)
 
     if args.ckpt_path is not None:
         checkpoint = torch.load(args.ckpt_path, map_location='cpu')
         eft.load_state_dict(checkpoint['model_state_dict'])
-    print('LOADING 1/3 loaded gpnr checkpoint from', args.ckpt_path)
+    print('LOADING 1/3 loaded eft checkpoint from', args.ckpt_path)
 
     #! LOAD VAE
     vae = load_vae(args.ckpt_path_vae).cuda(gpu)
@@ -535,7 +537,6 @@ def load_model(gpu, args):
         print('LOADING 3/3 loaded diffusion from', args.ckpt_path_diffusion)
     else:
         print('LOADING 3/3 loaded diffusion from', 'scratch')
-    print('cond drop prob:', diffusion.cond_drop_prob, 'can classifier guidance:', diffusion.can_classifier_guidance)
 
     return eft, vae, diffusion
 
@@ -558,9 +559,10 @@ def main():
                         help='dataset name')
     parser.add_argument('-b', '--backend', type=str, default='nccl', metavar='s',
                         help='nccl')
+    parser.add_argument('-a', '--vae', type=str, default='checkpoints/sd/sd-v1-3-vae.ckpt', metavar='S',
+                        help='vae ckpt')
     args = parser.parse_args()
     args.world_size = args.gpus * args.nodes
-    os.environ['NCCL_P2P_DISABLE'] = '0'
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = f'1234{args.port}'
     print('using port', f'1234{args.port}')
@@ -568,14 +570,13 @@ def main():
     torch.manual_seed(1)
 
     if args.dataset == 'co3d':
-        #! CO3D 
 
-        #! TODO TODO TODO 
-        #! TODO TODO 
-        #! TODO 
+        #! ####################################################################
+        #! TODO:  
+        #! ####################################################################
 
         #! EXPERIMENT GROUP FOLDER
-        args.exp_group = 'pi_nerf_exp5'
+        args.exp_group = 'sparsefusion_exp'
 
         #! EXPERIMENT NAME
         args.exp_name = 'demo_train'
@@ -584,35 +585,45 @@ def main():
         args.mod = '_joint'
     
         #! EXPERIMENT DIRECTORY
-        args.exp_dir = f'/compute/grogu-2-12/zhizhuoz/output/{args.exp_group}/{args.exp_name}/{args.category}{args.mod}'
+        args.exp_dir = f'output/{args.exp_group}/{args.exp_name}/{args.category}{args.mod}'
 
         #! STABLE DIFFUSION VAE PATH
-        args.ckpt_path_vae = '/compute/grogu-2-12/zhizhuoz/stable-diffusion-v-1-3/sd-v1-3.ckpt'
+        args.ckpt_path_vae = args.vae
 
+        #! NUMBER OF INPUTS VIEWS
+        args.num_input_range = (2,6) # [low, high) 
 
+        #! ####################################################################
+        #! ABOVE: TODO 
+        #! ####################################################################
 
-        if os.path.exists(f'{args.exp_dir}/ckpt_latest_gpnr.pt'):
+        #@ AUTOMATIC RESUME
+        #! WARNING: CURRENTLY DOES NOT RESUME OPTIMIZER
+        if os.path.exists(f'{args.exp_dir}/ckpt_latest_eft.pt'):
             print('***automatically resuming***')
-            args.ckpt_path = f'{args.exp_dir}/ckpt_latest_gpnr.pt'
+            args.ckpt_path = f'{args.exp_dir}/ckpt_latest_eft.pt'
             args.ckpt_path_diffusion = f'{args.exp_dir}/ckpt_latest.pt'
         else:
             print('***training from scratch***')
             args.ckpt_path = None # or default pretrained
             args.ckpt_path_diffusion = None # or default pretrained
 
-        args.timesteps = 500
-        args.objective = 'noise'
-        args.scale_factor = 8
-        args.image_size = 256
-        args.dataset_name = 'co3d'
-        args.num_input_range = (2,5)
-        args.vis_itr = 100
-        args.diffusion_batch_size = 12
-        args.repeat = 1
-        args.train_gpnr = True
-        print('joing gpnr training')
-    
-    args.save_itr = 1000
+        #@ SET PARAMETERS
+        args.timesteps = 500                # default diffusion steps (500)
+        args.objective = 'noise'            # default objective (noise)
+        args.scale_factor = 8               # default VAE scale factor
+        args.image_size = 256               # default image resolution
+        args.dataset_name = 'co3d'          # dataset name
+        args.diffusion_batch_size = 12      # extend batch size (12)
+        args.repeat = 1                     # repeat a scene (1)
+        args.vis_itr = 100                  # default visualization freq (100)
+        args.save_itr = 1000                # save iteration
+        args.train_eft = True               # jointly train EFT (eft)
+        if args.train_eft:
+            print('joint eft training')
+        
+
+    # Modification below not recommended 
     args.use_r = True
     args.encoder = 'resnet18'
     args.num_input = 4
