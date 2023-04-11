@@ -17,7 +17,8 @@ This project is built on top of open-source code. We thank the open-source resea
 We are releasing our inference code in early access. Future releases may drastically overwrite early access code. Our early access release will contain:
 
 1. Code for inference
-2. Pretrained weights for 10 categories
+2. Code for training
+3. Pretrained weights for 10 categories
 
 The repository is still under construction and I am working on improving comments and code readability.
 For bugs and issues, please open an issue on GitHub and I will try to address it promptly.
@@ -105,6 +106,20 @@ Early access training code is provided in `train.py`. Please follow the evaluati
 -c, --category          CO3D category
 -a, --vae               location to Stable Diffusion VAE checkpoint
 -b, --backend           distributed data parallel backend (default: nccl)
+```
+
+### Using Custom Datasets
+To train on a custom dataset, one needs to write a custom dataloader. We describe the required outputs for the `__getitem__` function, which should be a dictionary containing:
+```
+{
+  'images': (B, 3, H, W) image tensor,
+  'R': (B, 3, 3) PyTorch3D rotation,
+  'T': (B, 3) PyTorch3D translation,
+  'f': (B, 2) PyTorch3D focal_length in NDC space,
+  'c': (B, 2) PyTorch3D principal_point in NDC space,
+  'valid_region': (B, 1, H, W) binary tensor where 1 denotes valid image region,
+  'image_size': (B, 2) image size
+}
 ```
 
 ---
