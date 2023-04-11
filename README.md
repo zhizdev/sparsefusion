@@ -76,8 +76,8 @@ $ python demo.py -d co3d -r data/co3d/ -c hydrant -i 0
 
 ### Flags
 ```
--g, --gpus              number of gpus to use (default: 0)
--p, --port              last digit of DDP port (default: 0)
+-g, --gpus              number of gpus to use (default: 1)
+-p, --port              last digit of DDP port (default: 1)
 -d, --dataset_name      name of dataset (default: co3d_toy)
 -r, --root              root directory of the dataset 
 -c, --category          CO3D category
@@ -94,7 +94,18 @@ Output artifacts—images, gifs, torch-ngp checkpoints—will be saved to `outpu
 ---
 
 ## Training
-Early access training code is provided in `train.py`. Please follow the evaluation tutorial above to setup the environment and pretrained VAE weights. 
+Early access training code is provided in `train.py`. Please follow the evaluation tutorial above to setup the environment and pretrained VAE weights. It is recommended to directly modify `train.py` to specify the experiment directory and set the training hyperparameters. We show training flags below. 
+
+### Flags
+```
+-g, --gpus              number of gpus to use (default: 1)
+-p, --port              last digit of DDP port (default: 1)
+-d, --dataset_name      name of dataset (default: co3d_toy)
+-r, --root              root directory of the dataset 
+-c, --category          CO3D category
+-a, --vae               location to Stable Diffusion VAE checkpoint
+-b, --backend           distributed data parallel backend (default: nccl)
+```
 
 ---
 ## Citation
