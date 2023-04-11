@@ -13,14 +13,13 @@ SparseFusion reconstructs a consistent and realistic 3D neural scene representat
 This project is built on top of open-source code. We thank the open-source research community and credit our use of parts of [Stable Diffusion](https://github.com/CompVis/stable-diffusion), [Imagen Pytorch](https://github.com/lucidrains/imagen-pytorch), and [torch-ngp](https://github.com/ashawkey/torch-ngp) [below](#acknowledgements). 
 
 
-## Code (early access)
-We are releasing our inference code in early access. Future releases may drastically overwrite early access code. Our early access release will contain:
+## Code
+Our code release contains:
 
 1. Code for inference
 2. Code for training
 3. Pretrained weights for 10 categories
 
-The repository is still under construction and I am working on improving comments and code readability.
 For bugs and issues, please open an issue on GitHub and I will try to address it promptly.
 
 ---
